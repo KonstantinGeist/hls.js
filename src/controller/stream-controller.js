@@ -356,6 +356,14 @@ class StreamController extends BaseStreamController {
       // Remove the tolerance if it would put the bufferEnd past the actual end of stream
       // Uses buffer and sequence number to calculate switch segment (required if using EXT-X-DISCONTINUITY-SEQUENCE)
       fragNextLoad = findFragmentByPTS(fragPreviousLoad, fragments, bufferEnd, lookupTolerance);
+
+      // quick fix for https://github.com/video-dev/hls.js/issues/4319
+      if (!fragNextLoad && fragments.length >= fragmentIndexRange && fragmentIndexRange >= 2
+         && fragments[fragmentIndexRange - 1].duration < config.maxFragLookUpTolerance
+         && bufferEnd >= fragments[fragmentIndexRange - 2].start
+         && bufferEnd < fragments[fragmentIndexRange - 2].start + fragments[fragmentIndexRange - 2].duration) {
+        fragNextLoad = fragments[fragmentIndexRange - 1];
+      }
     } else {
       // reach end of playlist
       fragNextLoad = fragments[fragmentIndexRange - 1];
